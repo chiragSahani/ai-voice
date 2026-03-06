@@ -1,0 +1,12 @@
+
+.claude
+.env
+node_modules
+__pycache__
+*.pyc
+dist
+build
+.DS_Store
+redis-data
+postgres-data
+
