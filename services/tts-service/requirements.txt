@@ -1,0 +1,29 @@
+# Core framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# gRPC
+grpcio==1.69.0
+grpcio-tools==1.69.0
+grpcio-health-checking==1.69.0
+protobuf==5.29.3
+
+# TTS engine - using coqui-tts community fork
+coqui-tts>=0.24.0
+torch>=2.1.0
+transformers>=4.40.0,<4.46.0
+
+# Audio processing
+numpy==1.26.4
+scipy==1.14.1
+soundfile==0.12.1
+librosa==0.10.2.post1
+
+# Observability
+prometheus-client==0.21.1
+structlog==24.4.0
+
+# Utilities
+pybreaker==1.2.0

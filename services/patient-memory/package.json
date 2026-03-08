@@ -1,0 +1,41 @@
+{
+  "name": "@voice-agent/patient-memory",
+  "version": "1.0.0",
+  "description": "Patient Memory Service — CRUD with PHI encryption and audit logging",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.6.3",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.22.4",
+    "uuid": "^9.0.0",
+    "pino": "^8.16.1",
+    "pino-pretty": "^10.2.3",
+    "prom-client": "^15.0.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.20",
+    "@types/jsonwebtoken": "^9.0.4",
+    "@types/uuid": "^9.0.5",
+    "@types/cors": "^2.8.16",
+    "@types/compression": "^1.7.4",
+    "@types/node": "^20.8.10",
+    "typescript": "^5.2.2",
+    "ts-node-dev": "^2.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "@types/jest": "^29.5.8"
+  }
+}
