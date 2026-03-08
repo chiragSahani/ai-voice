@@ -1,12 +1,61 @@
-
-.claude
-.env
-node_modules
-__pycache__
+# Dependencies
+node_modules/
+__pycache__/
 *.pyc
-dist
-build
-.DS_Store
-redis-data
-postgres-data
+*.pyo
+.venv/
+venv/
+env/
 
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Claude
+.claude
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Models (large files)
+models/
+*.bin
+*.pt
+*.onnx
+
+# Logs
+*.log
+logs/
+
+# Docker volumes
+redis-data/
+mongo-data/
+
+# Docker
+docker-compose.override.yml
+
+# SSL certs
+infrastructure/nginx/ssl/*.pem
+infrastructure/nginx/ssl/*.key
+infrastructure/nginx/ssl/*.crt
+
+# Test coverage
+coverage/
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Generated proto stubs
+*_pb2.py
+*_pb2_grpc.py
+*_pb2.pyi

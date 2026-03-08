@@ -1,0 +1,88 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "appointments",
+    "title": "Appointments Dashboard",
+    "tags": ["voice-agent", "appointments"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": { "from": "now-24h", "to": "now" },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Bookings Today",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(increase(appointments_created_total[24h]))", "legendFormat": "Total" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Cancellations Today",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+        "targets": [
+          { "expr": "sum(increase(appointments_cancelled_total[24h]))", "legendFormat": "Cancelled" }
+        ],
+        "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" } } }
+      },
+      {
+        "id": 3,
+        "title": "Reschedules Today",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(increase(appointments_rescheduled_total[24h]))", "legendFormat": "Rescheduled" }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Booking Channel",
+        "type": "piechart",
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+        "targets": [
+          { "expr": "sum(increase(appointments_created_total[24h])) by (channel)", "legendFormat": "{{ channel }}" }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Booking Rate Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "targets": [
+          { "expr": "sum(rate(appointments_created_total[1h])) by (channel)", "legendFormat": "{{ channel }}" }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Slot Availability",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "targets": [
+          { "expr": "appointment_slots_available", "legendFormat": "Available Slots" },
+          { "expr": "appointment_slots_held", "legendFormat": "Held Slots" }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Booking Conflicts (Optimistic Lock Retries)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "targets": [
+          { "expr": "rate(appointment_booking_conflicts_total[5m])", "legendFormat": "Conflicts/s" }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Scheduler API Latency P99",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "targets": [
+          { "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{service=\"appointment-scheduler\"}[5m]))", "legendFormat": "P99" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s" } }
+      }
+    ]
+  }
+}

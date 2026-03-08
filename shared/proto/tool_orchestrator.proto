@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package voice.tools.v1;
+
+option java_multiple_files = true;
+option java_outer_classname = "ToolOrchestratorProto";
+
+// Tool Orchestration service.
+// Routes LLM tool calls to appropriate backend services.
+service ToolOrchestrator {
+  // Execute a single tool call
+  rpc ExecuteTool (ToolRequest) returns (ToolResponse);
+
+  // Execute multiple tool calls in parallel
+  rpc ExecuteToolBatch (ToolBatchRequest) returns (ToolBatchResponse);
+
+  // List available tools and their schemas
+  rpc ListTools (ListToolsRequest) returns (ListToolsResponse);
+}
+
+// Single tool execution request
+message ToolRequest {
+  string session_id = 1;
+  string tool_name = 2;             // "check_availability", "book_appointment", etc.
+  string arguments_json = 3;        // JSON-encoded tool arguments
+  string correlation_id = 4;        // Links back to the LLM tool_call.id
+  string patient_id = 5;            // Patient context (for authorization)
+}
+
+// Tool execution response
+message ToolResponse {
+  string correlation_id = 1;
+  bool success = 2;
+  string result_json = 3;           // JSON-encoded result
+  string error_message = 4;         // Set if success=false
+  string error_code = 5;            // Machine-readable error code
+  int32 latency_ms = 6;
+}
+
+// Batch tool execution request
+message ToolBatchRequest {
+  string session_id = 1;
+  repeated ToolRequest requests = 2;
+}
+
+// Batch tool execution response
+message ToolBatchResponse {
+  repeated ToolResponse responses = 1;
+  int32 total_latency_ms = 2;
+}
+
+// Request to list available tools
+message ListToolsRequest {
+  string role = 1;                   // Filter tools by role permissions
+}
+
+// Available tools response
+message ListToolsResponse {
+  repeated ToolDefinition tools = 1;
+}
+
+// Tool definition (used to build LLM function specs)
+message ToolDefinition {
+  string name = 1;
+  string description = 2;
+  string parameters_json_schema = 3; // JSON Schema for parameters
+  bool requires_patient_id = 4;      // Whether patient must be identified
+  repeated string required_permissions = 5;
+}

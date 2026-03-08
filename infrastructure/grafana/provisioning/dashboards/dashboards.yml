@@ -1,0 +1,16 @@
+# Grafana dashboard provisioning
+
+apiVersion: 1
+
+providers:
+  - name: "Voice Agent Dashboards"
+    orgId: 1
+    folder: "Voice Agent"
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

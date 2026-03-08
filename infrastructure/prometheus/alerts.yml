@@ -1,0 +1,129 @@
+# Prometheus alerting rules for Voice Agent Platform
+
+groups:
+  - name: voice_pipeline_latency
+    rules:
+      - alert: HighSTTLatency
+        expr: histogram_quantile(0.99, rate(grpc_request_duration_seconds_bucket{service="stt-service"}[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          team: ai-pipeline
+        annotations:
+          summary: "STT P99 latency above 100ms"
+          description: "STT service P99 latency is {{ $value }}s (threshold: 100ms)"
+
+      - alert: HighTTSLatency
+        expr: histogram_quantile(0.99, rate(grpc_request_duration_seconds_bucket{service="tts-service"}[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          team: ai-pipeline
+        annotations:
+          summary: "TTS P99 latency above 50ms"
+          description: "TTS service P99 latency is {{ $value }}s (threshold: 50ms)"
+
+      - alert: HighLLMLatency
+        expr: histogram_quantile(0.99, rate(grpc_request_duration_seconds_bucket{service="llm-agent"}[5m])) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+          team: ai-pipeline
+        annotations:
+          summary: "LLM Agent P99 TTFT above 200ms"
+          description: "LLM Agent P99 latency is {{ $value }}s (threshold: 200ms)"
+
+      - alert: EndToEndLatencyHigh
+        expr: histogram_quantile(0.99, rate(voice_pipeline_duration_seconds_bucket[5m])) > 0.45
+        for: 5m
+        labels:
+          severity: critical
+          team: ai-pipeline
+        annotations:
+          summary: "End-to-end voice pipeline P99 above 450ms target"
+          description: "Voice pipeline P99 latency is {{ $value }}s (target: 450ms)"
+
+  - name: service_health
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been unreachable for more than 1 minute"
+
+      - alert: HighErrorRate
+        expr: rate(errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "{{ $labels.service }} error rate is {{ $value }}/s"
+
+      - alert: HighHTTPErrorRate
+        expr: sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (service) / sum(rate(http_requests_total[5m])) by (service) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP 5xx error rate above 5% on {{ $labels.service }}"
+          description: "{{ $labels.service }} 5xx rate is {{ $value | humanizePercentage }}"
+
+  - name: infrastructure
+    rules:
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage above 85%"
+          description: "Redis is using {{ $value | humanizePercentage }} of max memory"
+
+      - alert: MongoDBHighConnections
+        expr: mongodb_connections_current / mongodb_connections_available > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MongoDB connection usage above 80%"
+
+      - alert: MongoDBReplicationLag
+        expr: mongodb_replset_member_replication_lag > 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MongoDB replication lag above 10 seconds"
+
+  - name: circuit_breakers
+    rules:
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state{state="open"} == 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit breaker {{ $labels.circuit }} is OPEN"
+          description: "Circuit breaker {{ $labels.circuit }} on {{ $labels.service }} has tripped"
+
+  - name: campaigns
+    rules:
+      - alert: CampaignCallFailureRate
+        expr: sum(rate(campaign_calls_total{status="failed"}[15m])) by (campaign_id) / sum(rate(campaign_calls_total[15m])) by (campaign_id) > 0.3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Campaign {{ $labels.campaign_id }} failure rate above 30%"
+
+      - alert: CampaignQueueBacklog
+        expr: campaign_queue_size > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Campaign queue backlog above 1000 jobs"

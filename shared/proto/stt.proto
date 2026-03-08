@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package voice.stt.v1;
+
+option java_multiple_files = true;
+option java_outer_classname = "SttProto";
+
+// Speech-to-Text service with bidirectional streaming.
+// Client streams audio chunks, server streams transcript events.
+service SpeechToText {
+  // Bidirectional streaming: client sends audio, server returns transcripts
+  rpc StreamingRecognize (stream AudioChunk) returns (stream TranscriptEvent);
+
+  // Unary: detect language from a short audio sample
+  rpc DetectLanguage (AudioSample) returns (LanguageDetectionResult);
+}
+
+// A chunk of raw audio data (PCM16, 16kHz, mono)
+message AudioChunk {
+  bytes audio_data = 1;       // Raw PCM16 bytes (640 bytes = 20ms at 16kHz)
+  string session_id = 2;      // Session identifier
+  int64 timestamp_ms = 3;     // Client-side timestamp in milliseconds
+  AudioConfig config = 4;     // Only required on first chunk
+}
+
+// Audio format configuration (sent with first chunk)
+message AudioConfig {
+  int32 sample_rate = 1;      // Sample rate in Hz (default: 16000)
+  int32 channels = 2;         // Number of channels (default: 1)
+  string encoding = 3;        // "pcm16" | "opus" | "flac"
+  string language_hint = 4;   // Optional ISO 639-1 hint: "en", "hi", "ta"
+}
+
+// Transcript event emitted by the server
+message TranscriptEvent {
+  string session_id = 1;
+  string text = 2;                    // Transcript text
+  string language = 3;                // Detected language (ISO 639-1)
+  float language_confidence = 4;      // Language detection confidence [0.0-1.0]
+  float transcript_confidence = 5;    // Transcript accuracy confidence [0.0-1.0]
+  bool is_final = 6;                  // true = final transcript, false = partial/interim
+  TranscriptType type = 7;
+  int64 start_ms = 8;                 // Speech start timestamp
+  int64 end_ms = 9;                   // Speech end timestamp (0 if partial)
+  repeated WordInfo words = 10;       // Word-level timing (final transcripts only)
+}
+
+enum TranscriptType {
+  PARTIAL = 0;      // Interim/partial transcript (may change)
+  FINAL = 1;        // Final transcript (stable)
+  ENDPOINT = 2;     // VAD detected end of speech
+  SILENCE = 3;      // Extended silence detected
+}
+
+// Word-level timing information
+message WordInfo {
+  string word = 1;
+  int64 start_ms = 2;
+  int64 end_ms = 3;
+  float confidence = 4;
+}
+
+// Audio sample for language detection
+message AudioSample {
+  bytes audio_data = 1;       // 1-2 seconds of audio
+  string session_id = 2;
+}
+
+// Language detection result
+message LanguageDetectionResult {
+  string primary_language = 1;        // Most likely language
+  float primary_confidence = 2;
+  repeated LanguageScore alternatives = 3;
+  bool is_code_switched = 4;         // Multiple languages detected
+}
+
+// Score for a single language
+message LanguageScore {
+  string language = 1;
+  float confidence = 2;
+}

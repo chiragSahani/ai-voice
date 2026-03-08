@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package voice.llm.v1;
+
+option java_multiple_files = true;
+option java_outer_classname = "LlmAgentProto";
+
+// LLM Reasoning Agent service.
+// Receives transcripts + context, returns streaming responses with tool calls.
+service LLMAgent {
+  // Streaming chat: send request, receive token-by-token response
+  rpc Chat (ChatRequest) returns (stream ChatResponseChunk);
+
+  // Generate a conversation summary for long-term memory
+  rpc Summarize (SummarizeRequest) returns (SummarizeResponse);
+}
+
+// Chat request with full conversation context
+message ChatRequest {
+  string session_id = 1;
+  string transcript = 2;             // Current user utterance
+  string language = 3;               // Detected language (ISO 639-1)
+  repeated ConversationTurn history = 4;  // Conversation history
+  map<string, string> patient_context = 5; // Patient info for personalization
+  string system_prompt_override = 6;  // Custom prompt (e.g., for campaigns)
+}
+
+// A single conversation turn
+message ConversationTurn {
+  string role = 1;                   // "user" | "assistant" | "tool" | "system"
+  string content = 2;               // Text content
+  string tool_call_id = 3;          // If role=tool, the tool call this responds to
+  ToolCall tool_call = 4;           // If role=assistant and it made a tool call
+  int64 timestamp_ms = 5;
+}
+
+// A tool/function call from the LLM
+message ToolCall {
+  string id = 1;                     // Unique tool call identifier
+  string name = 2;                   // Tool name: "book_appointment", "check_availability", etc.
+  string arguments_json = 3;         // JSON-encoded arguments
+}
+
+// Streaming response chunk
+message ChatResponseChunk {
+  string session_id = 1;
+  string text_delta = 2;            // Incremental text token(s)
+  ToolCall tool_call = 3;           // Tool call (sent as complete object when ready)
+  bool is_final = 4;                // true = response complete
+  string finish_reason = 5;         // "stop" | "tool_calls" | "length" | "error"
+  ResponseMetadata metadata = 6;    // Only on final chunk
+}
+
+// Metadata about the LLM response
+message ResponseMetadata {
+  string model_used = 1;            // Which model generated this response
+  int32 prompt_tokens = 2;
+  int32 completion_tokens = 3;
+  int32 total_tokens = 4;
+  int32 latency_ms = 5;             // Time to first token
+  bool used_fallback = 6;           // true if fallback model was used
+}
+
+// Request to summarize a conversation
+message SummarizeRequest {
+  string session_id = 1;
+  string patient_id = 2;
+  repeated ConversationTurn turns = 3;
+  string language = 4;
+}
+
+// Conversation summary for long-term memory
+message SummarizeResponse {
+  string session_id = 1;
+  string summary = 2;               // Human-readable summary
+  repeated string key_entities = 3;  // Extracted entities: doctor names, dates, departments
+  string sentiment = 4;             // "positive" | "neutral" | "negative"
+  repeated string actions_taken = 5; // e.g., ["booked_appointment", "checked_availability"]
+}

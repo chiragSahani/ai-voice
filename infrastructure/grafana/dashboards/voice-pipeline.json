@@ -1,0 +1,93 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "voice-pipeline",
+    "title": "Voice Pipeline Performance",
+    "tags": ["voice-agent", "pipeline", "latency"],
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": { "from": "now-30m", "to": "now" },
+    "panels": [
+      {
+        "id": 1,
+        "title": "End-to-End Pipeline Latency (P50/P95/P99)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "histogram_quantile(0.5, rate(voice_pipeline_duration_seconds_bucket[5m]))", "legendFormat": "P50" },
+          { "expr": "histogram_quantile(0.95, rate(voice_pipeline_duration_seconds_bucket[5m]))", "legendFormat": "P95" },
+          { "expr": "histogram_quantile(0.99, rate(voice_pipeline_duration_seconds_bucket[5m]))", "legendFormat": "P99" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s", "custom": { "thresholdsStyle": { "mode": "line" } }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.45, "color": "red" }] } } }
+      },
+      {
+        "id": 2,
+        "title": "STT Latency P99",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+        "targets": [
+          { "expr": "histogram_quantile(0.99, rate(grpc_request_duration_seconds_bucket{service=\"stt-service\"}[5m]))", "legendFormat": "STT P99" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.08, "color": "yellow" }, { "value": 0.1, "color": "red" }] } } }
+      },
+      {
+        "id": 3,
+        "title": "LLM TTFT P99",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+        "targets": [
+          { "expr": "histogram_quantile(0.99, rate(grpc_request_duration_seconds_bucket{service=\"llm-agent\"}[5m]))", "legendFormat": "LLM P99" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.15, "color": "yellow" }, { "value": 0.2, "color": "red" }] } } }
+      },
+      {
+        "id": 4,
+        "title": "TTS Latency P99",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+        "targets": [
+          { "expr": "histogram_quantile(0.99, rate(grpc_request_duration_seconds_bucket{service=\"tts-service\"}[5m]))", "legendFormat": "TTS P99" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.03, "color": "yellow" }, { "value": 0.05, "color": "red" }] } } }
+      },
+      {
+        "id": 5,
+        "title": "Tool Execution P99",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+        "targets": [
+          { "expr": "histogram_quantile(0.99, rate(grpc_request_duration_seconds_bucket{service=\"tool-orchestrator\"}[5m]))", "legendFormat": "Tool P99" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.05, "color": "yellow" }, { "value": 0.08, "color": "red" }] } } }
+      },
+      {
+        "id": 6,
+        "title": "Active WebSocket Sessions",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "targets": [
+          { "expr": "active_connections{service=\"audio-gateway\"}", "legendFormat": "WebSocket Sessions" }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Language Distribution",
+        "type": "piechart",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "targets": [
+          { "expr": "sum(rate(stt_requests_total[1h])) by (language)", "legendFormat": "{{ language }}" }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Circuit Breaker States",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 24, "x": 0, "y": 20 },
+        "targets": [
+          { "expr": "circuit_breaker_state{state=\"open\"}", "legendFormat": "{{ circuit }}" }
+        ],
+        "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "CLOSED", "color": "green" }, "1": { "text": "OPEN", "color": "red" } } }] } }
+      }
+    ]
+  }
+}

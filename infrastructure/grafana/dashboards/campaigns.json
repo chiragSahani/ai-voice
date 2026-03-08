@@ -1,0 +1,89 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "campaigns",
+    "title": "Campaign Engine Dashboard",
+    "tags": ["voice-agent", "campaigns"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": { "from": "now-24h", "to": "now" },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Campaigns",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "campaigns_active_total", "legendFormat": "Active" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Calls Completed Today",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+        "targets": [
+          { "expr": "sum(increase(campaign_calls_total{status=\"completed\"}[24h]))", "legendFormat": "Completed" }
+        ],
+        "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } }
+      },
+      {
+        "id": 3,
+        "title": "Calls Failed Today",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(increase(campaign_calls_total{status=\"failed\"}[24h]))", "legendFormat": "Failed" }
+        ],
+        "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } } }
+      },
+      {
+        "id": 4,
+        "title": "Queue Size",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+        "targets": [
+          { "expr": "campaign_queue_size", "legendFormat": "Pending Jobs" }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Call Rate Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "targets": [
+          { "expr": "sum(rate(campaign_calls_total[5m])) by (status)", "legendFormat": "{{ status }}" }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Call Outcomes",
+        "type": "piechart",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "targets": [
+          { "expr": "sum(increase(campaign_calls_total[24h])) by (outcome)", "legendFormat": "{{ outcome }}" }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Average Call Duration",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "targets": [
+          { "expr": "rate(campaign_call_duration_seconds_sum[5m]) / rate(campaign_call_duration_seconds_count[5m])", "legendFormat": "Avg Duration" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s" } }
+      },
+      {
+        "id": 8,
+        "title": "Answer Rate by Campaign",
+        "type": "bargauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "targets": [
+          { "expr": "sum(campaign_calls_total{status=\"completed\"}) by (campaign_id) / sum(campaign_calls_total) by (campaign_id)", "legendFormat": "{{ campaign_id }}" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1 } }
+      }
+    ]
+  }
+}

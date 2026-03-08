@@ -1,0 +1,117 @@
+# Prometheus configuration for Voice Agent Platform
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - "alerts.yml"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+scrape_configs:
+  # --- Prometheus self-monitoring ---
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # --- Node.js Services (Express) ---
+  - job_name: "api-gateway"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api-gateway:3000"]
+        labels:
+          service: api-gateway
+          tier: edge
+
+  - job_name: "appointment-scheduler"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["appointment-scheduler:3010"]
+        labels:
+          service: appointment-scheduler
+          tier: app
+
+  - job_name: "patient-memory"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["patient-memory:3020"]
+        labels:
+          service: patient-memory
+          tier: app
+
+  - job_name: "campaign-engine"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["campaign-engine:3030"]
+        labels:
+          service: campaign-engine
+          tier: app
+
+  # --- Python Services (FastAPI) ---
+  - job_name: "audio-gateway"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["audio-gateway:8080"]
+        labels:
+          service: audio-gateway
+          tier: edge
+
+  - job_name: "stt-service"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["stt-service:9090"]
+        labels:
+          service: stt-service
+          tier: ai-pipeline
+
+  - job_name: "tts-service"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["tts-service:9091"]
+        labels:
+          service: tts-service
+          tier: ai-pipeline
+
+  - job_name: "llm-agent"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["llm-agent:8090"]
+        labels:
+          service: llm-agent
+          tier: ai-pipeline
+
+  - job_name: "tool-orchestrator"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["tool-orchestrator:8091"]
+        labels:
+          service: tool-orchestrator
+          tier: ai-pipeline
+
+  - job_name: "session-manager"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["session-manager:6380"]
+        labels:
+          service: session-manager
+          tier: app
+
+  # --- Infrastructure ---
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+        labels:
+          service: redis
+
+  - job_name: "mongodb"
+    static_configs:
+      - targets: ["mongodb-exporter:9216"]
+        labels:
+          service: mongodb
